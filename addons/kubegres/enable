@@ -20,7 +20,7 @@ echo '-------------------------- Creating PV --------------------------------'
 sudo mkdir -p /data
 sudo mkdir -p /data/postgres
 sudo chmod -R 777 /data/postgres
-sed -i "s/#CHANGE_HOST#/${HOST}/g" kubegres/2-postgres-pv.yaml
+sudo sed -i "s/#CHANGE_HOST#/${HOST}/g" kubegres/2-postgres-pv.yaml
 sudo microk8s kubectl apply -f kubegres/2-postgres-pv.yaml
 
 sleep 10s
