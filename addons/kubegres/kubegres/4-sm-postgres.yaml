@@ -1,0 +1,39 @@
+apiVersion: kubegres.reactive-tech.io/v1
+kind: Kubegres
+metadata:
+  name: sm-main-kubegres
+  namespace: sm-kubegres
+spec:
+   replicas: 1
+   image: postgres:14.1
+   database:
+      size: 30Gi
+      storageClassName: local-storage
+   resources:
+      limits:
+         memory: "2Gi"
+         cpu: "1000m"
+      requests:
+         memory: "1Gi"
+         cpu: "800m"      
+   env:
+      - name: POSTGRES_PASSWORD
+        valueFrom:
+           secretKeyRef:
+              name: sm-main-postgres-secret
+              key: superUserPassword
+      - name: POSTGRES_REPLICATION_PASSWORD
+        valueFrom:
+           secretKeyRef:
+              name: sm-main-postgres-secret
+              key: replicationUserPassword
+   scheduler:
+      affinity:
+         nodeAffinity:
+            requiredDuringSchedulingIgnoredDuringExecution:
+               nodeSelectorTerms:
+               - matchExpressions:
+                  - key: databasenode
+                    operator: In
+                    values:
+                    - kubegres

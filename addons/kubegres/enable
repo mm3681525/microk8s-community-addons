@@ -1,0 +1,46 @@
+#!/bin/bash
+
+set -e
+
+echo '-------------------------- Start script --------------------------------'
+HOST=`hostname`
+IP=`hostname -I | awk '{print $1}'`
+HOME=`pwd`
+echo $HOME
+
+echo '-------------------------- Setting local persistent volume --------------------------------'
+sudo microk8s kubectl apply -f 1-local-storage-class.yaml
+sudo microk8s kubectl patch storageclass local-storage -p '{"metadata": {"annotations":{"storageclass.kubernetes.io/is-default-class":"true"}}}'
+sudo microk8s kubectl label nodes $HOST databasenode=kubegres
+
+echo '-------------------------- Check nodes and labels --------------------------------'
+sudo microk8s kubectl get nodes --show-labels
+
+echo '-------------------------- Creating PV --------------------------------'
+sudo mkdir -p /data
+sudo mkdir -p /data/postgres
+sudo chmod -R 777 /data/postgres
+sed -i "s/#CHANGE_HOST#/${HOST}/g" 2-postgres-pv.yaml
+sudo microk8s kubectl apply -f 2-postgres-pv.yaml
+
+sleep 10s
+
+echo '-------------------------- Download and Install Postgres Operator --------------------------------'
+sudo microk8s kubectl apply -f kubegres.yaml
+
+echo '-------------------------- Deploy kubegres cluster --------------------------------'
+sudo microk8s kubectl create namespace sm-kubegres
+sudo microk8s kubectl apply -f 3-sm-postgres-secret.yaml
+sudo microk8s kubectl apply -f 4-sm-postgres.yaml
+sudo microk8s kubectl get events -n sm-kubegres
+
+sleep 10s
+
+echo '-------------------------- Check pods --------------------------------'
+sudo microk8s kubectl get pod,statefulset,svc,configmap,pv,pvc -n sm-kubegres -o wide
+#echo  "host    all             all              0.0.0.0/0                       md5" >> /data/postgres/pgdata/pg_hba.conf
+#echo  "host    all             all              ::/0                            md5" >> /data/postgres/pgdata/pg_hba.conf
+sudo sed -i -e '$ahost    all             all              0.0.0.0/0                       md5' /data/postgres/pgdata/pg_hba.conf
+sudo sed -i -e '$ahost    all             all              ::/0                            md5' /data/postgres/pgdata/pg_hba.conf
+
+echo '-------------------------- Finish --------------------------------'
