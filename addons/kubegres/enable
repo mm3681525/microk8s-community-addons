@@ -9,7 +9,7 @@ HOME=`pwd`
 echo $HOME
 
 echo '-------------------------- Setting local persistent volume --------------------------------'
-sudo microk8s kubectl apply -f 1-local-storage-class.yaml
+sudo microk8s kubectl apply -f kubegres/1-local-storage-class.yaml
 sudo microk8s kubectl patch storageclass local-storage -p '{"metadata": {"annotations":{"storageclass.kubernetes.io/is-default-class":"true"}}}'
 sudo microk8s kubectl label nodes $HOST databasenode=kubegres
 
@@ -20,18 +20,18 @@ echo '-------------------------- Creating PV --------------------------------'
 sudo mkdir -p /data
 sudo mkdir -p /data/postgres
 sudo chmod -R 777 /data/postgres
-sed -i "s/#CHANGE_HOST#/${HOST}/g" 2-postgres-pv.yaml
-sudo microk8s kubectl apply -f 2-postgres-pv.yaml
+sed -i "s/#CHANGE_HOST#/${HOST}/g" kubegres/2-postgres-pv.yaml
+sudo microk8s kubectl apply -f kubegres/2-postgres-pv.yaml
 
 sleep 10s
 
 echo '-------------------------- Download and Install Postgres Operator --------------------------------'
-sudo microk8s kubectl apply -f kubegres.yaml
+sudo microk8s kubectl apply -f kubegres/kubegres.yaml
 
 echo '-------------------------- Deploy kubegres cluster --------------------------------'
 sudo microk8s kubectl create namespace sm-kubegres
-sudo microk8s kubectl apply -f 3-sm-postgres-secret.yaml
-sudo microk8s kubectl apply -f 4-sm-postgres.yaml
+sudo microk8s kubectl apply -f kubegres/3-sm-postgres-secret.yaml
+sudo microk8s kubectl apply -f kubegres/4-sm-postgres.yaml
 sudo microk8s kubectl get events -n sm-kubegres
 
 sleep 10s
