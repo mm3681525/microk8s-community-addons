@@ -40,6 +40,8 @@ echo '-------------------------- Check pods --------------------------------'
 sudo microk8s kubectl get pod,statefulset,svc,configmap,pv,pvc -n sm-kubegres -o wide
 #echo  "host    all             all              0.0.0.0/0                       md5" >> /data/postgres/pgdata/pg_hba.conf
 #echo  "host    all             all              ::/0                            md5" >> /data/postgres/pgdata/pg_hba.conf
+sudo mkdir -p /data/postgres/pgdata
+sudo touch /data/postgres/pgdata/pg_hba.conf
 sudo sed -i -e '$ahost    all             all              0.0.0.0/0                       md5' /data/postgres/pgdata/pg_hba.conf
 sudo sed -i -e '$ahost    all             all              ::/0                            md5' /data/postgres/pgdata/pg_hba.conf
 
